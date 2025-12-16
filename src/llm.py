@@ -42,12 +42,13 @@ async def query_spec_call_llm(system_prompt: str, user_message: str) -> QuerySpe
             query_data["is_banking_domain"] = response_data.get("is_banking_domain")
             
             # Fix TimeRange - must update query_data dict directly
-            time_range = query_data.get("time_range", {})
-            if time_range.get("mode") == "relative" and (not time_range.get("last") or not time_range.get("unit")):
-                # Set defaults for relative mode
-                time_range["last"] = 180
-                time_range["unit"] = "days"
-                query_data["time_range"] = time_range  # Update the dict
+            time_range = query_data.get("time_range")
+            if time_range is not None:  # Only process if time_range is provided
+                if time_range.get("mode") == "relative" and (not time_range.get("last") or not time_range.get("unit")):
+                    # Set defaults for relative mode
+                    time_range["last"] = 180
+                    time_range["unit"] = "days"
+                    query_data["time_range"] = time_range  # Update the dict
             
             # Fix params if it's a string instead of dict
             if isinstance(query_data.get("params"), str):
@@ -56,4 +57,9 @@ async def query_spec_call_llm(system_prompt: str, user_message: str) -> QuerySpe
                 except:
                     query_data["params"] = {}
             
-            return QuerySpec.model_validate(query_data)
+            print(f"DEBUG - query_data before validation:\n{json.dumps(query_data, indent=2)}")
+            try:
+                return QuerySpec.model_validate(query_data)
+            except Exception as validation_error:
+                print(f"DEBUG - QuerySpec validation failed: {validation_error}")
+                raise

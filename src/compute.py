@@ -38,12 +38,17 @@ def _month_bounds(d: date) -> Tuple[date, date]:
         end = start.replace(month=start.month + 1)
     return start, end
 
-def resolve_time_range(tr: TimeRange) -> Tuple[date, date]:
+def resolve_time_range(tr: TimeRange | None) -> Tuple[date, date]:
     """
     Returns (start_date, end_date_exclusive).
+    If tr is None, returns a default range (last 30 days).
     """
     today = date.today()
     end = today + timedelta(days=1)
+    
+    if tr is None:
+        # Default: last 30 days
+        return today - timedelta(days=30), end
 
     if tr.mode == "preset":
         if tr.preset == "ytd":
@@ -126,7 +131,9 @@ def dispute_form_for_transaction(t: Transaction) -> UIForm:
 # 4 core handlers
 # --------------------------
 
-def _describe_range(tr: TimeRange) -> str:
+def _describe_range(tr: TimeRange | None) -> str:
+    if tr is None:
+        return "recent history"
     if tr.mode == "preset" and tr.preset == "ytd":
         return "year-to-date"
     if tr.mode == "preset" and tr.preset == "last_month":

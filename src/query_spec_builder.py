@@ -1,5 +1,5 @@
 import re
-from typing import Optional, cast
+from typing import Any, Optional, cast
 
 from src.config import OLLAMA_MODEL, OLLAMA_URL
 from src.llm import query_spec_call_llm
@@ -11,14 +11,22 @@ async def compile_queryspec(message: str, context: Optional[ConversationContext]
         raise ValueError("OLLAMA_MODEL and OLLAMA_URL must be set")
     try:
         llm_response = await query_spec_call_llm(QUERY_SPEC_SYSTEM_PROMPT, message)
+        
+        # If intent is unrecognized_transaction and context has selectedTransactionId, inject it
+        if llm_response.intent == "unrecognized_transaction" and context and context.selectedTransactionId:
+            # Create new QuerySpec with updated params (Pydantic models are immutable)
+            updated_params: dict[str, Any] = {**llm_response.params, "transaction_id": context.selectedTransactionId}
+            llm_response = QuerySpec(
+                is_banking_domain=llm_response.is_banking_domain,
+                intent=llm_response.intent,
+                time_range=llm_response.time_range,
+                params=updated_params
+            )
+        
         return llm_response
     except Exception as e:
        print(f"LLM query spec failed: {e}, falling back to rules-based")
        return _compile_rules(message, context)
-
-# def _format_input(message: str, context: Optional[ConversationContext]) -> str:
-#     selected = context.selectedTransactionId if context else None
-#     return f"message: {message}\nselectedTransactionId: {selected}"
 
 
 def _compile_rules(message: str, context: Optional[ConversationContext]) -> QuerySpec:
@@ -33,6 +41,7 @@ def _compile_rules(message: str, context: Optional[ConversationContext]) -> Quer
     ):
         tx_id = _extract_tx_id(text) or (context.selectedTransactionId if context else None)
         return QuerySpec(
+            is_banking_domain=True,
             intent="unrecognized_transaction",
             time_range=_default_time("unrecognized_transaction"),
             params={"transaction_id": tx_id},
@@ -40,6 +49,7 @@ def _compile_rules(message: str, context: Optional[ConversationContext]) -> Quer
 
     if "recurring" in text or "subscription" in text or "subscriptions" in text:
         return QuerySpec(
+            is_banking_domain=True,
             intent="recurring_payments",
             time_range=_default_time("recurring_payments"),
             params={"min_occurrences": 3},
@@ -47,6 +57,7 @@ def _compile_rules(message: str, context: Optional[ConversationContext]) -> Quer
 
     if ("top" in text and ("spend" in text or "spending" in text)) and ("year" in text or "ytd" in text or "this year" in text):
         return QuerySpec(
+            is_banking_domain=True,
             intent="top_spending_ytd",
             time_range=TimeRange(mode="preset", preset="ytd"),
             params={"top_k": 5},
@@ -57,6 +68,7 @@ def _compile_rules(message: str, context: Optional[ConversationContext]) -> Quer
         tr = _parse_time_range(text) or _default_time("transactions_list")
         limit = _parse_limit(text) or 50
         return QuerySpec(
+            is_banking_domain=True,
             intent="transactions_list",
             time_range=tr,
             params={"limit": limit, "include_pending": True},
@@ -64,6 +76,7 @@ def _compile_rules(message: str, context: Optional[ConversationContext]) -> Quer
 
     # safe fallback: show last 30 days transactions
     return QuerySpec(
+        is_banking_domain=True,
         intent="transactions_list",
         time_range=_default_time("transactions_list"),
         params={"limit": 50, "include_pending": True},

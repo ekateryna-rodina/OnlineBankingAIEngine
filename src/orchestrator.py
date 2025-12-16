@@ -50,7 +50,7 @@ async def orchestrate_chat(req: ChatRequest) -> ChatResponse:
        - others: fetch transactions and compute UI
     4. Return ChatResponse with UI specification
     """
-    q = await compile_queryspec(req.message)
+    q = await compile_queryspec(req.message, req.context)
     
     if not q.is_banking_domain:
         ui = UISpec(messages=[UIMessage(

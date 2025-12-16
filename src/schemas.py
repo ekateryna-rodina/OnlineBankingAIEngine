@@ -91,7 +91,7 @@ class TimeRange(BaseModel):
 class QuerySpec(BaseModel):
     is_banking_domain: Optional[bool] = None
     intent: Intent
-    time_range: TimeRange = Field(default_factory=TimeRange)
+    time_range: Optional[TimeRange] = Field(default_factory=TimeRange)
     params: Dict[str, Any] = Field(default_factory=dict)
     # examples:
     # top_spending_ytd: {"top_k": 5}
