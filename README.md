@@ -1,3 +1,66 @@
+SETUP:
+
+How do we run the LLM locally:
+
+1. Open Docker Desktop
+2. Pull the image: docker run -d -v ollama:/root/.ollama -p 11434:11434 --name ollama ollama/ollama
+3. Run the model: docker exec -it ollama ollama run llama3.2
+4. Once you run the model - you can smoke test it in your terminal - just talk to it :)
+
+   <img width="682" height="563" alt="complete" src="https://github.com/user-attachments/assets/3b07d28d-bc10-48a3-9920-06e4bf3c131a" />
+
+   Yohooo! You’ve got the model running locally using CPU. 
+
+
+How do we run our project API:
+
+1. Check if python is installed on your PC: “which python3”
+2. Navigate to repo’s root: cd ~/OnlineBanking_Chat
+3. Create virtual environment (required to isolate python dependencies for this project on your PC): python3 -m venv .venv
+4. Activate virtual environment: source .venv/bin/activate
+5. Install dependencies: ‘pip install -r requirements.txt’ or ‘python -m pip install -r requirements.txt’
+6. Create .env file in the root of the project with variables:
+    * OLLAMA_URL=http://localhost:11434/v1/chat/completions
+    * OLLAMA_MODEL=llama3.2:latest
+    * TOOL_BASE_URL=http://localhost:8000
+
+1. Run the API: ‘uvicorn src.app:app --reload --port 8000’
+2. Test: curl http://localhost:8000/health
+3. Call: curl -i -X POST http://localhost:8000/chat \  -H "Content-Type: application/json" \
+4.   -d '{"accountId":"A123","message":"What are my top spendings this year?"}'
+5.   For debuggin in VS code - here is a launch.json config. Make sure that python interpreter is setup in the Workplace.
+   Run Shift + Command + P (mac) -> Python:Interpreter -> <img width="622" height="432" alt="image" src="https://github.com/user-attachments/assets/e9ef23f5-f44e-4113-8262-c2c9d6a0ec6c" />
+
+launch.json file
+   
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "FastAPI Debug",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "uvicorn",
+            "args": [
+                "src.app:app",
+                "--reload",
+                "--port", "8000"
+            ],
+            "jinja": true,
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "OLLAMA_URL": "http://localhost:11434/v1/chat/completions",
+                "OLLAMA_MODEL": "llama3.2:latest",
+                "TOOL_BASE_URL": "http://localhost:8000"
+            }
+        }
+    ]
+}
+
+
+TESTING:
+
+
 1. What user spends money on?
 
 API request
