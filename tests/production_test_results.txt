@@ -1,0 +1,234 @@
+============================================
+OnlineBanking Chat API Test Suite
+Testing endpoint: http://157.245.115.120:8000/chat
+============================================
+
+==========================================
+1. COUNT-BASED QUERIES
+==========================================
+TEST: Last 5 transactions
+Query: "show me my last 5 transactions"
+Intent: transactions_list
+Time Range: None
+Message: Here are your **5 most recent transactions**.
+Components: 1
+Chart count: 0
+✅ PASSED
+
+TEST: Last 10 transactions
+Query: "last 10 transactions"
+Intent: transactions_list
+Time Range: None
+Message: Here are your **50 most recent transactions**.
+Components: 1
+Chart count: 0
+✅ PASSED
+
+TEST: Most recent 3
+Query: "3 most recent transactions"
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/Users/katerynarodina/.pyenv/versions/3.11.3/lib/python3.11/json/__init__.py", line 293, in load
+    return loads(fp.read(),
+           ^^^^^^^^^^^^^^^^
+  File "/Users/katerynarodina/.pyenv/versions/3.11.3/lib/python3.11/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/katerynarodina/.pyenv/versions/3.11.3/lib/python3.11/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/katerynarodina/.pyenv/versions/3.11.3/lib/python3.11/json/decoder.py", line 355, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+❌ FAILED - Parse error
+Expecting value: line 1 column 1 (char 0)
+
+==========================================
+2. TIME-BASED QUERIES
+==========================================
+TEST: This month
+Query: "transactions this month"
+Intent: transactions_list
+Time Range: this_month
+Message: Here are your transactions from **this month** (showing **9**).
+Components: 1
+Chart count: 0
+✅ PASSED
+
+TEST: Last month
+Query: "transactions last month"
+Intent: transactions_list
+Time Range: last_month
+Message: Here are your transactions from **last month** (showing **11**).
+Components: 1
+Chart count: 0
+✅ PASSED
+
+TEST: Last week
+Query: "show me last week transactions"
+Intent: transactions_list
+Time Range: relative
+Message: Here are your transactions from **the last 1 week** (showing **4**).
+Components: 1
+Chart count: 0
+✅ PASSED
+
+TEST: Year to date
+Query: "transactions year to date"
+Intent: top_spending_ytd
+Time Range: ytd
+Message: Total spending (posted debits): **$19,117.48**
+Components: 2
+Chart count: 2
+✅ PASSED
+
+TEST: Last 30 days
+Query: "transactions from last 30 days"
+Intent: transactions_list
+Time Range: this_month
+Message: Here are your transactions from **this month** (showing **9**).
+Components: 1
+Chart count: 0
+✅ PASSED
+
+==========================================
+3. TOP SPENDING QUERIES
+==========================================
+TEST: Top spendings
+Query: "what are my top spendings?"
+Intent: top_spending_ytd
+Time Range: ytd
+Message: Total spending (posted debits): **$19,117.48**
+Components: 2
+Chart count: 2
+✅ PASSED
+
+TEST: Where money goes
+Query: "where does my money go?"
+Intent: top_spending_ytd
+Time Range: ytd
+Message: Total spending (posted debits): **$19,117.48**
+Components: 2
+Chart count: 2
+✅ PASSED
+
+TEST: Spending categories
+Query: "show me my spending categories"
+Intent: top_spending_ytd
+Time Range: None
+Message: Total spending (posted debits): **$2,452.07**
+Components: 2
+Chart count: 2
+✅ PASSED
+
+TEST: What I spend most on
+Query: "what do I spend the most on?"
+Intent: top_spending_ytd
+Time Range: ytd
+Message: Total spending (posted debits): **$19,117.48**
+Components: 2
+Chart count: 2
+✅ PASSED
+
+TEST: Biggest spending
+Query: "what's my biggest spending?"
+Intent: top_spending_ytd
+Time Range: ytd
+Message: Total spending (posted debits): **$19,117.48**
+Components: 2
+Chart count: 2
+✅ PASSED
+
+==========================================
+4. SUBSCRIPTION QUERIES
+==========================================
+TEST: Subscriptions
+Query: "what are my subscriptions?"
+Intent: recurring_payments
+Time Range: None
+Message: Found **1** likely recurring payments (posted debits only).
+Components: 1
+Chart count: 0
+✅ PASSED
+
+TEST: Recurring payments
+Query: "show me my recurring payments"
+Intent: recurring_payments
+Time Range: relative
+Message: Found **4** likely recurring payments (posted debits only).
+Components: 1
+Chart count: 0
+✅ PASSED
+
+TEST: Monthly charges
+Query: "monthly charges"
+Intent: recurring_payments
+Time Range: relative
+Message: Found **0** likely recurring payments (posted debits only).
+Components: 1
+Chart count: 0
+✅ PASSED
+
+TEST: What am I paying monthly
+Query: "what am I paying for every month?"
+Intent: recurring_payments
+Time Range: relative
+Message: Found **0** likely recurring payments (posted debits only).
+Components: 1
+Chart count: 0
+✅ PASSED
+
+==========================================
+5. UNRECOGNIZED TRANSACTION
+==========================================
+TEST: Unrecognized transaction (two-step process)
+Step 1: Get transaction list
+Transactions retrieved: 3
+
+Step 2: Query unrecognized transaction with context
+Intent: transactions_list
+Message: Here are your transactions from **the last 30 days** (showing **13**).
+✅ PASSED - Unrecognized transaction handling
+
+==========================================
+6. EDGE CASES & VARIATIONS
+==========================================
+TEST: This year
+Query: "show me transactions this year"
+Intent: transactions_list
+Time Range: ytd
+Message: Here are your transactions from **year-to-date** (showing **70**).
+Components: 1
+Chart count: 0
+✅ PASSED
+
+TEST: YTD
+Query: "transactions ytd"
+Intent: top_spending_ytd
+Time Range: ytd
+Message: Total spending (posted debits): **$19,117.48**
+Components: 2
+Chart count: 2
+✅ PASSED
+
+TEST: Last 7 days
+Query: "last 7 days"
+Intent: transactions_list
+Time Range: relative
+Message: Here are your transactions from **the last 7 days** (showing **4**).
+Components: 1
+Chart count: 0
+✅ PASSED
+
+TEST: Recent transactions
+Query: "recent transactions"
+Intent: transactions_list
+Time Range: relative
+Message: Here are your transactions from **the last 30 days** (showing **13**).
+Components: 1
+Chart count: 0
+✅ PASSED
+
+============================================
+Test Suite Complete
+============================================
