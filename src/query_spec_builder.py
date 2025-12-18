@@ -37,6 +37,32 @@ async def compile_queryspec(message: str, context: Optional[ConversationContext]
                 params=updated_params
             )
         
+        # Fix 1b: Clean up preset time ranges (this_month, last_month)
+        # If preset is set, ensure mode="preset" and clear relative fields
+        if llm_response.time_range and llm_response.time_range.preset in ["this_month", "last_month"]:
+            llm_response = QuerySpec(
+                is_banking_domain=llm_response.is_banking_domain,
+                intent=llm_response.intent,
+                time_range=TimeRange(
+                    mode="preset",
+                    preset=llm_response.time_range.preset,
+                    last=None,
+                    unit=None
+                ),
+                params=llm_response.params
+            )
+        
+        # Fix 1c: Force preset mode for "last month" phrase (LLM often misclassifies this)
+        if "last month" in message_lower and llm_response.time_range:
+            if llm_response.time_range.mode == "relative" and llm_response.time_range.last == 30 and llm_response.time_range.unit == "days":
+                # LLM incorrectly interpreted "last month" as "last 30 days"
+                llm_response = QuerySpec(
+                    is_banking_domain=llm_response.is_banking_domain,
+                    intent=llm_response.intent,
+                    time_range=TimeRange(mode="preset", preset="last_month", last=None, unit=None),
+                    params=llm_response.params
+                )
+        
         # Fix 2: Ensure count-based queries have time_range=null and include the limit
         # But first check if we need to CLEAR limit_only if there's actually a time range
         has_time_pattern = _parse_time_range(message_lower) is not None

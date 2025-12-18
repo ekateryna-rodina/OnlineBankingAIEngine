@@ -52,9 +52,15 @@ Intent Mapping (EXACT phrases):
 2. If message contains "subscription" OR "recurring" OR "bill":
    => intent="recurring_payments"
    
-3. If message contains "top" OR "biggest" OR "most" with "spend":
-   => intent="top_spending_ytd" (if "year" or "ytd" mentioned)
-   => intent="transactions_list" (otherwise)
+3. If message contains ANY of these patterns, use top_spending_ytd:
+   - "top spending" OR "top spendings"
+   - "biggest spending" OR "most spending"
+   - "where" with "money" or "spend" (e.g., "where does my money go")
+   - "spending categories" OR "top categories"
+   - "spending this year" OR "spending ytd" OR "year to date"
+   - "what do I spend on" OR "what am I spending on"
+   => intent="top_spending_ytd"
+   => time_range: mode="preset", preset="ytd"
    
 4. Otherwise:
    => intent="transactions_list"
@@ -112,10 +118,14 @@ COUNT vs WINDOW (CRITICAL - read carefully):
    - "Show my transactions year to date" => time_range: mode="preset", preset="ytd"
 
 Time rules (for transactions_list when TIME PERIOD is mentioned):
-- "this year" / "ytd" => mode="preset", preset="ytd"
-- "this month" => mode="preset", preset="this_month"
-- "last month" => mode="preset", preset="last_month"
-- "last N days/weeks/months/years" => mode="relative", last=N, unit="days"|"weeks"|"months"|"years"
+
+CRITICAL: Use PRESET mode for these specific phrases (DO NOT use relative mode):
+- "this year" / "ytd" / "year to date" => mode="preset", preset="ytd", last=null, unit=null
+- "this month" => mode="preset", preset="this_month", last=null, unit=null  
+- "last month" => mode="preset", preset="last_month", last=null, unit=null
+
+Use RELATIVE mode for numbered time periods:
+- "last N days/weeks/months/years" => mode="relative", preset=null, last=N, unit="days"|"weeks"|"months"|"years"
   Examples:
   - "last 2 weeks" => mode="relative", last=2, unit="weeks"
   - "last 30 days" => mode="relative", last=30, unit="days"
