@@ -34,7 +34,7 @@ Natural language queries → Structured UI responses. FastAPI + OpenAI gpt-4o-mi
        ▼
 ┌─────────────────────────────────────────────────────────────┐
 │              LLM (llm.py)                                    │
-│  OpenAI API | LocalLLM: gpt-4o-mini                                        │
+│  OpenAI API | LocalLLM: gpt-4o-mini | llama3.2                                      │
 │  Returns: { intent, params }                     │
 └──────┬──────────────────────────────────────────────────────┘
        │
