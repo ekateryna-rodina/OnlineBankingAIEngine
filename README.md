@@ -1,3 +1,141 @@
+# OnlineBanking AI Engine - Architecture
+
+Natural language queries → Structured UI responses. FastAPI + OpenAI gpt-4o-mini for intent classification.
+
+## System Architecture
+
+```
+┌─────────────┐
+│ User Query  │ "What are my 20 most recent transactions?"
+└──────┬──────┘
+       │
+       ▼
+┌─────────────────────────────────────────────────────────────┐
+│                      FastAPI (app.py)                        │
+│                     POST /chat endpoint                      │
+└──────┬──────────────────────────────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────────────────────────────┐
+│            Orchestrator (orchestrator.py)                    │
+│  • Calls query builder                                       │
+│  • Fetches transaction data                                  │
+│  • Routes to intent handler                                  │
+└──────┬──────────────────────────────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────────────────────────────┐
+│       Query Builder (query_spec_builder.py)                  │
+│  • Sends prompt to LLM                                       │
+│  • Parses response → QuerySpec                               │
+│  • Post-processing overrides (Fix -2, -1, 0, 1, 2)          │
+└──────┬──────────────────────────────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────────────────────────────┐
+│              LLM (llm.py)                                    │
+│  OpenAI API | LocalLLM: gpt-4o-mini                                        │
+│  Returns: { intent, params }                     │
+└──────┬──────────────────────────────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────────────────────────────┐
+│           Intent Handlers (compute.py)                       │
+│  • transactions_list                                         │
+│  • top_spending_ytd                                          │
+│  • recurring_payments                                        │
+│  • category_spending_analysis                                │
+│  • unrecognized_transaction                                  │
+│  • account_balance                                           │
+└──────┬──────────────────────────────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────────────────────────────┐
+│           Response (schemas.py)                              │
+│  ChatResponse {                                              │
+│    query: QuerySpec                                          │
+│    ui: { messages: [...], components: [...] }                │
+│  }                                                           │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## Component Map
+
+| File | Purpose | Key Exports |
+|------|---------|-------------|
+| **app.py** | FastAPI app | `/chat`, `/health` endpoints |
+| **orchestrator.py** | Request coordinator | `orchestrate_chat()` |
+| **query_spec_builder.py** | Intent classification | `compile_queryspec()` + 5 post-processing fixes |
+| **llm.py** | LLM wrapper | `chat_completion()` for OpenAI/Ollama |
+| **compute.py** | Business logic | 6 intent handler functions |
+| **prompts.py** | LLM instructions | 217-line system prompt with intent rules |
+| **schemas.py** | Type definitions | `QuerySpec`, `ChatResponse`, `UISpec`, `Intent` |
+| **config.py** | Configuration | Environment variables, API keys |
+| **tools_api.py** | Mock data source | Transaction data endpoints |
+
+## Architecture Highlights
+
+**✅ Strict Type Validation**
+- Pydantic schemas enforce LLM response structure
+- Invalid JSON → automatic fallback to safe defaults
+- Type-safe `Intent` literal prevents hallucinated intents
+
+**✅ Post-Processing Safety**
+- 5 override rules catch LLM edge cases
+- Pattern matching after classification (doesn't break existing queries)
+- Example: "too much on dining" → Override ensures correct intent even if LLM misclassifies
+
+**✅ Dual LLM Support**
+- Single codebase supports OpenAI (production) + Ollama (local dev)
+- Switch via `USE_OPENAI` env var
+- Cost optimization: $0.0001/query vs free self-hosted
+
+**✅ Separation of Concerns**
+- Orchestrator → Query Builder → LLM → Handlers (clean flow)
+- Each component has single responsibility
+- Easy to test, debug, and extend
+
+**✅ Production-Ready**
+- Docker Compose deployment
+- Automated testing (35 test cases)
+- Health checks and error handling
+
+## Future Improvements
+
+**🎯 Two-Step Intent Classification**
+- **Current:** Single 217-line prompt does intent + parameter extraction
+- **Improved:** Step 1: Pure intent classification (30 lines) → Step 2: Intent-specific param extraction
+- **Benefits:** 2-3x faster, higher accuracy, easier to debug, less token cost
+
+**📈 Scalability & Architecture**
+- **Rate limiting:** Prevent abuse (e.g., 10 req/min per user)
+- **Caching layer:** Redis for common queries (balance, recent transactions)
+- **Async transaction fetching:** Parallel data loading for faster response
+- **Response streaming:** Stream LLM output for better perceived performance
+
+**🔒 Security Enhancements**
+- **Input sanitization:** Prevent prompt injection attacks
+- **API key rotation:** Automated rotation for OpenAI keys
+- **Request validation:** Strict schema validation on all inputs
+- **Rate limiting:** Per-user and per-IP throttling
+- **Audit logging:** Track all queries and intent classifications
+
+**💡 Accuracy & Intelligence**
+- **Multi-turn conversations:** Context retention across queries
+- **Confidence scores:** LLM confidence metrics to trigger clarification questions
+- **A/B testing framework:** Compare prompt variations, measure accuracy improvements
+- **Real category spending:** Replace mocked data with actual transaction analysis
+
+**🚀 Additional Features**
+- **Budget alerts:** "You're 80% through your dining budget"
+- **Savings suggestions:** AI-driven spending optimization tips
+- **Anomaly detection:** Flag unusual transactions automatically
+- **Natural language responses:** Conversational output instead of just UI components (LLM to produce response query)
+
+
+======================================================================================================================
+
+
 SETUP:
 
 How do we run the LLM locally:
