@@ -1,6 +1,6 @@
 # OnlineBanking AI Engine - Architecture
 
-Natural language queries → Structured UI responses. FastAPI + OpenAI gpt-4o-mini for intent classification.
+Natural language queries → Structured UI responses. FastAPI + OpenAI gpt-4o-mini and LocalLLM llama3.2 support for intent classification.
 
 ## System Architecture
 
